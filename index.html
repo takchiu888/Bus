@@ -198,7 +198,7 @@
 
   <!-- 控制列 -->
   <div class="control-bar">
-    <div class="section-title">🚌 巴士實時到站（預設 MA131 / MA354 / MA358 / MA391 / MA393）</div>
+    <div class="section-title">🚌 巴士實時到站（預設 MA131, 354, 358, 391, 392）</div>
     <button class="btn-settings" onclick="openModal()">🔍 管理/新增車站</button>
   </div>
 
@@ -227,10 +227,17 @@
 
   <script>
     let allKmbStops = [];
-    let mySavedStops = JSON.parse(localStorage.getItem('myKmbStops')) || [];
+    
+    // 只精確預設你的 5 個指定車站代碼 (MA131, MA354, MA358, MA391, MA392)
+    const presetStopCodes = [
+      "MA131-S-1000-0",
+      "MA354-S-1000-0",
+      "MA358-S-1000-0",
+      "MA391-S-1000-0",
+      "MA392-S-1000-0"
+    ];
 
-    // 預設車站關鍵字（涵蓋 MA131, MA354, MA358, MA391, MA393 車站）
-    const presetTargetNames = ["錦泰苑", "德信中學", "富安花園", "亞公角"];
+    let mySavedStops = JSON.parse(localStorage.getItem('myKmbStops_v2')) || [];
 
     // 1. 時鐘
     function updateClock() {
@@ -256,27 +263,22 @@
     fetchWeather();
     setInterval(fetchWeather, 600000);
 
-    // 3. 下載九巴車站對照表並預設站位
+    // 3. 下載車站列表並載入指定 5 個預設站點
     async function initKmbStops() {
       try {
         const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop');
         const json = await res.json();
         allKmbStops = json.data || [];
 
-        // 如果使用者第一次開啟，自動載入 MA131, MA354, MA358, MA391, MA393 的對應車站
+        // 首次使用時，自動匹配該 5 個特定車站 ID
         if (mySavedStops.length === 0 && allKmbStops.length > 0) {
-          const autoStops = allKmbStops.filter(stop => 
-            presetTargetNames.some(target => stop.name_tc.includes(target))
-          );
-
-          // 避免重複加入
-          autoStops.forEach(stop => {
-            if (!mySavedStops.some(s => s.id === stop.stop)) {
-              mySavedStops.push({ id: stop.stop, name: stop.name_tc });
+          presetStopCodes.forEach(code => {
+            const found = allKmbStops.find(stop => stop.stop === code);
+            if (found) {
+              mySavedStops.push({ id: found.stop, name: found.name_tc });
             }
           });
-
-          localStorage.setItem('myKmbStops', JSON.stringify(mySavedStops));
+          localStorage.setItem('myKmbStops_v2', JSON.stringify(mySavedStops));
         }
 
         fetchAllETAs();
@@ -337,7 +339,7 @@
 
     function closeModal() {
       document.getElementById('modal').style.display = 'none';
-      localStorage.setItem('myKmbStops', JSON.stringify(mySavedStops));
+      localStorage.setItem('myKmbStops_v2', JSON.stringify(mySavedStops));
       fetchAllETAs();
     }
 
