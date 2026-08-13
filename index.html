@@ -103,7 +103,7 @@
       padding: 2px 6px; 
       border-radius: 4px; 
       font-weight: 600;
-      max-width: 130px;
+      max-width: 140px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -139,7 +139,7 @@
 
   <!-- 控制列 -->
   <div class="control-bar">
-    <div class="section-title">🚌 錦泰苑 / 德信中學（MA131, 354, 358, 391, 392）</div>
+    <div class="section-title">🚌 錦泰苑 / 富安花園 實時到站</div>
     <button class="btn" onclick="forceReloadStops()">↺ 強制重新載入</button>
   </div>
 
@@ -151,9 +151,10 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'kmb_stops_ma_v5';
-    // 指定 5 個站牌對應的中文站名
-    const TARGET_STOPS = ["錦泰苑", "德信中學"];
+    const STORAGE_KEY = 'kmb_stops_kamtai_chevalier_v6';
+    // 指定目標：錦泰苑與富安花園，明確排除德信中學
+    const TARGET_KEYWORDS = ["錦泰苑", "富安花園"];
+    const EXCLUDE_KEYWORDS = ["德信中學"];
     
     let targetStopsList = [];
 
@@ -188,47 +189,49 @@
     fetchWeather();
     setInterval(fetchWeather, 600000);
 
-    // 3. 自動搜尋並對應 MA131, 354, 358, 391, 392 的 ID
+    // 3. 自動搜尋並對應錦泰苑及富安花園的所有站位 ID
     async function loadTargetStops() {
-      // 先清理舊版本 Key
-      ['myKmbStops_v1','myKmbStops_v2','myKmbStops_v3','myKmbStops_v4'].forEach(k => localStorage.removeItem(k));
+      // 清理歷史舊 Version Key
+      ['myKmbStops_v1','myKmbStops_v2','myKmbStops_v3','myKmbStops_v4','kmb_stops_ma_v5'].forEach(k => localStorage.removeItem(k));
 
       try {
         const cached = localStorage.getItem(STORAGE_KEY);
         if (cached) {
           targetStopsList = JSON.parse(cached);
           if (targetStopsList.length > 0) {
-            setStatus(`已定位 ${targetStopsList.length} 個站點 (MA131/354/358/391/392)，載入班次中...`);
+            setStatus(`已鎖定 ${targetStopsList.length} 個「錦泰苑/富安花園」站點，載入班次中...`);
             fetchETAs();
             return;
           }
         }
       } catch(e) {}
 
-      // 若快取無數據，向 API 檢索 16 位元 ID
-      setStatus('連線九巴資料庫定位 MA131, 354, 358, 391, 392 站位中...');
+      setStatus('正在連線九巴 API 獲取「錦泰苑」與「富安花園」所有站位...');
       try {
         const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop');
-        if (!res.ok) throw new Error('網絡連線錯誤');
+        if (!res.ok) throw new Error('網絡連線失敗');
 
         const json = await res.json();
         const allStops = json.data || [];
 
-        // 精確匹配錦泰苑與德信中學的 5 個站位
-        const matched = allStops.filter(s => 
-          s.name_tc && TARGET_STOPS.some(kw => s.name_tc.includes(kw))
-        );
+        // 包含錦泰苑/富安花園，並排除德信中學
+        const matched = allStops.filter(s => {
+          if (!s.name_tc) return false;
+          const isTarget = TARGET_KEYWORDS.some(kw => s.name_tc.includes(kw));
+          const isExcluded = EXCLUDE_KEYWORDS.some(kw => s.name_tc.includes(kw));
+          return isTarget && !isExcluded;
+        });
 
         if (matched.length > 0) {
           targetStopsList = matched.map(s => ({ id: s.stop, name: s.name_tc }));
           localStorage.setItem(STORAGE_KEY, JSON.stringify(targetStopsList));
-          setStatus(`成功匹配 ${targetStopsList.length} 個指定站位！載入班次中...`);
+          setStatus(`成功自動識別 ${targetStopsList.length} 個站點！載入班次中...`);
           fetchETAs();
         } else {
-          setStatus('無法自動配對站位，請按右側「強制重新載入」。', true);
+          setStatus('未找到相關站點，請點擊「強制重新載入」。', true);
         }
       } catch (err) {
-        setStatus(`資料下載失敗：${err.message}，請檢查網絡`, true);
+        setStatus(`資料讀取失敗：${err.message}，請檢查網絡環境`, true);
       }
     }
 
@@ -264,7 +267,8 @@
           res.data.forEach(item => {
             if (!item || !item.eta || !item.route) return;
 
-            const key = `${item.route}_${item.dest_tc}`;
+            // 以「路線_目的地_站名」作為獨立鍵，確保不同方向與站位分開顯示
+            const key = `${item.route}_${item.dest_tc}_${res.stopName}`;
             if (!routeMap[key]) {
               routeMap[key] = {
                 route: item.route,
@@ -281,12 +285,12 @@
 
         const keys = Object.keys(routeMap);
         if (keys.length === 0) {
-          container.innerHTML = `<div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 30px; background: #1E293B; border-radius: 12px;">目前無實時班次數據（或非服務時間）</div>`;
-          setStatus(`已連線，目前無服務班次 (${new Date().toLocaleTimeString('zh-HK')})`);
+          container.innerHTML = `<div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 30px; background: #1E293B; border-radius: 12px;">目前無實時班次數據（可能非服務時間）</div>`;
+          setStatus(`已連線，目前無班次數據 (${new Date().toLocaleTimeString('zh-HK')})`);
           return;
         }
 
-        // 按路線名稱排序 (例如: 85K, 85X, 87D...)
+        // 依路線號碼自然排序（如 43X, 81C, 85K, 89C, 289K, 680...）
         keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
         let html = '';
@@ -315,7 +319,7 @@
         });
 
         container.innerHTML = html;
-        setStatus(`最後更新：${new Date().toLocaleTimeString('zh-HK')} - 包含 5 個指定站位`);
+        setStatus(`最後更新：${new Date().toLocaleTimeString('zh-HK')} - 共 ${keys.length} 項到站預告`);
 
       } catch (e) {
         setStatus(`更新班次失敗：${e.message}`, true);
@@ -330,9 +334,9 @@
       return `${diffMins} 分鐘`;
     }
 
-    // 啟動程式
+    // 啟動系統
     loadTargetStops();
-    setInterval(fetchETAs, 30000); // 每 30 秒自動刷新班次
+    setInterval(fetchETAs, 30000); // 每 30 秒自動刷新
   </script>
 </body>
 </html>
