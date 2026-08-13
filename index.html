@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>iPad 交通天氣儀表板</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,7 +12,7 @@
       color: #F8FAFC;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       height: 100vh;
-      padding: 20px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -25,48 +24,62 @@
       justify-content: space-between;
       align-items: center;
       background: #1E293B;
-      padding: 16px 28px;
-      border-radius: 20px;
+      padding: 16px 24px;
+      border-radius: 16px;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
       flex-shrink: 0;
     }
     .clock-box { display: flex; flex-direction: column; }
-    .time { font-size: 4.2rem; font-weight: 700; color: #38BDF8; line-height: 1; letter-spacing: -1px; }
-    .date { font-size: 1.2rem; color: #94A3B8; margin-top: 6px; }
+    .time { font-size: 3.8rem; font-weight: 700; color: #38BDF8; line-height: 1; letter-spacing: -1px; }
+    .date { font-size: 1.1rem; color: #94A3B8; margin-top: 6px; }
     
-    .weather-box { display: flex; align-items: center; gap: 20px; }
-    .temp-main { font-size: 3.5rem; font-weight: 700; color: #F1F5F9; }
-    .weather-info { font-size: 1.1rem; color: #CBD5E1; display: flex; flex-direction: column; gap: 4px; }
+    .weather-box { display: flex; align-items: center; gap: 16px; }
+    .temp-main { font-size: 3.2rem; font-weight: 700; color: #F1F5F9; }
+    .weather-info { font-size: 1rem; color: #CBD5E1; display: flex; flex-direction: column; gap: 2px; }
     .humidity { color: #38BDF8; }
 
-    /* 控制列 */
-    .control-bar {
-      margin-top: 16px;
+    /* 系統狀態提示列 */
+    .status-bar {
+      margin-top: 10px;
+      background: #0284C7;
+      color: #FFFFFF;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #0F172A;
-      padding: 4px 0;
       flex-shrink: 0;
     }
-    .section-title { font-size: 1.2rem; color: #94A3B8; font-weight: 600; }
-    .btn-settings {
-      background: #0284C7;
+
+    /* 控制列 */
+    .control-bar {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .section-title { font-size: 1.1rem; color: #94A3B8; font-weight: 600; }
+    .btn-group { display: flex; gap: 8px; }
+    .btn {
+      background: #334155;
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 8px 14px;
       border-radius: 8px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       cursor: pointer;
       font-weight: 600;
     }
+    .btn-primary { background: #0284C7; }
 
-    /* 下方：到站時間資訊區 */
+    /* 到站時間區 */
     .grid-container {
       flex: 1;
       overflow-y: auto;
-      margin-top: 8px;
-      padding-right: 4px;
+      margin-top: 10px;
+      padding-right: 2px;
     }
     .grid {
       display: grid;
@@ -75,35 +88,35 @@
     }
     .card {
       background: #1E293B;
-      border-radius: 16px;
-      padding: 16px 20px;
+      border-radius: 12px;
+      padding: 14px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-left: 6px solid #EF4444; /* 九巴紅 */
+      border-left: 5px solid #EF4444;
     }
 
     .route-header { display: flex; align-items: center; gap: 8px; }
-    .route-number { font-size: 2rem; font-weight: 800; color: #F8FAFC; }
+    .route-number { font-size: 1.8rem; font-weight: 800; color: #F8FAFC; }
     .stop-badge { 
       background: #334155; 
       color: #38BDF8; 
-      font-size: 0.8rem; 
-      padding: 2px 8px; 
-      border-radius: 6px; 
+      font-size: 0.75rem; 
+      padding: 2px 6px; 
+      border-radius: 4px; 
       font-weight: 600;
-      max-width: 140px;
+      max-width: 120px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .route-dest { font-size: 1rem; color: #94A3B8; margin-top: 2px; }
+    .route-dest { font-size: 0.95rem; color: #94A3B8; margin-top: 2px; }
     
     .eta-box { text-align: right; }
-    .eta-main { font-size: 2rem; font-weight: 700; color: #10B981; }
-    .eta-sub { font-size: 0.85rem; color: #64748B; margin-top: 2px; }
+    .eta-main { font-size: 1.8rem; font-weight: 700; color: #10B981; }
+    .eta-sub { font-size: 0.8rem; color: #64748B; margin-top: 2px; }
 
-    /* 彈出式搜尋視窗 */
+    /* Modal */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -118,16 +131,15 @@
       width: 90%;
       max-width: 500px;
       border-radius: 16px;
-      padding: 24px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
       max-height: 80vh;
     }
-    .modal-title { font-size: 1.3rem; font-weight: 700; color: white; }
     .search-input {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
       border-radius: 8px;
       border: 1px solid #475569;
       background: #0F172A;
@@ -140,43 +152,28 @@
       max-height: 200px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
     .result-item {
       background: #334155;
-      padding: 12px;
-      border-radius: 8px;
+      padding: 10px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
     }
-    .selected-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }
+    .selected-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .tag {
       background: #0284C7;
       color: white;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.9rem;
+      padding: 4px 8px;
+      border-radius: 16px;
+      font-size: 0.85rem;
       display: flex;
       align-items: center;
       gap: 6px;
     }
     .tag span { cursor: pointer; font-weight: bold; }
-    .btn-close {
-      background: #10B981;
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 1rem;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -185,7 +182,7 @@
   <div class="header">
     <div class="clock-box">
       <div class="time" id="clock">00:00</div>
-      <div class="date" id="date">加載中...</div>
+      <div class="date" id="date">載入中...</div>
     </div>
     <div class="weather-box">
       <div class="temp-main" id="temp">--°C</div>
@@ -196,42 +193,56 @@
     </div>
   </div>
 
+  <!-- 系統狀態提示列 -->
+  <div class="status-bar" id="status-bar">
+    <span id="status-msg">🚀 正在啟動系統...</span>
+  </div>
+
   <!-- 控制列 -->
   <div class="control-bar">
-    <div class="section-title">🚌 錦泰苑 / 德信中學（MA131, 354, 358, 391, 392）</div>
-    <button class="btn-settings" onclick="openModal()">🔍 管理/新增車站</button>
+    <div class="section-title">🚌 錦泰苑 / 德信中學 實時到站</div>
+    <div class="btn-group">
+      <button class="btn" onclick="resetDefaultStops()">↺ 重置預設車站</button>
+      <button class="btn btn-primary" onclick="openModal()">🔍 管理車站</button>
+    </div>
   </div>
 
   <!-- 到站時間列表 -->
   <div class="grid-container">
     <div class="grid" id="eta-container">
-      <div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px;">巴士數據載入中...</div>
+      <div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px;">請稍候，資料處理中...</div>
     </div>
   </div>
 
   <!-- 車站搜尋 Modal -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
-      <div class="modal-title">搜尋車站</div>
-      <input type="text" class="search-input" id="search-input" placeholder="輸入關鍵字搜尋..." oninput="searchStops()">
+      <h3 style="color: white;">搜尋並新增車站</h3>
+      <input type="text" class="search-input" id="search-input" placeholder="輸入關鍵字 (如: 錦泰苑)..." oninput="searchStops()">
       <div class="search-results" id="search-results">
-        <div style="color: #94A3B8; text-align: center; padding: 10px;">請在上方輸入車站關鍵字</div>
+        <div style="color: #94A3B8; text-align: center; padding: 10px;">請在上方輸入車站名稱</div>
       </div>
       <div>
-        <div style="font-size: 0.9rem; color: #94A3B8;">目前顯示的車站：</div>
+        <div style="font-size: 0.85rem; color: #94A3B8;">已選擇的車站：</div>
         <div class="selected-list" id="selected-tags"></div>
       </div>
-      <button class="btn-close" onclick="closeModal()">儲存並顯示</button>
+      <button class="btn btn-primary" style="padding: 10px;" onclick="closeModal()">儲存並更新</button>
     </div>
   </div>
 
   <script>
-    let allKmbStops = [];
+    const STORAGE_KEY = 'myKmbStops_v4';
+    const TARGET_KEYWORDS = ["錦泰苑", "德信中學"];
     
-    // MA131, MA354, MA358, MA391, MA392 在 API 中的官方名稱
-    const targetNames = ["錦泰苑", "德信中學"];
+    let allKmbStops = [];
+    let mySavedStops = [];
 
-    let mySavedStops = JSON.parse(localStorage.getItem('myKmbStops_v3')) || [];
+    function setStatus(msg, isError = false) {
+      const bar = document.getElementById('status-bar');
+      const text = document.getElementById('status-msg');
+      text.innerText = msg;
+      bar.style.background = isError ? '#991B1B' : '#0284C7';
+    }
 
     // 1. 時鐘
     function updateClock() {
@@ -252,132 +263,100 @@
         const data = await res.json();
         if (data.temperature?.data?.length > 0) document.getElementById('temp').innerText = `${data.temperature.data[0].value}°C`;
         if (data.humidity?.data?.length > 0) document.getElementById('humidity').innerText = data.humidity.data[0].value;
-      } catch (err) { console.error('天氣加載失敗', err); }
+      } catch (err) { console.error('天氣失敗', err); }
     }
     fetchWeather();
     setInterval(fetchWeather, 600000);
 
-    // 3. 下載車站列表並自動載入錦泰苑與德信中學對應的所有站位
-    async function initKmbStops() {
+    // 3. 初始化主邏輯
+    async function initApp() {
+      // 試圖讀取本地記錄
       try {
-        const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop');
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) mySavedStops = JSON.parse(saved);
+      } catch (e) { mySavedStops = []; }
+
+      // 若完全無紀錄或紀錄為空，則向 API 自動檢索「錦泰苑」與「德信中學」
+      if (!mySavedStops || mySavedStops.length === 0) {
+        await autoFetchTargetStops();
+      } else {
+        setStatus(`已載入 ${mySavedStops.length} 個已儲存站點，正在獲取班次...`);
+        fetchETAs();
+      }
+    }
+
+    // 自動搜尋預設站點
+    async function autoFetchTargetStops() {
+      setStatus('正在連線九巴 API 檢索「錦泰苑」與「德信中學」站點...');
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒逾時
+
+        const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        if (!res.ok) throw new Error(`HTTP 錯誤: ${res.status}`);
+
         const json = await res.json();
         allKmbStops = json.data || [];
 
-        // 首次使用時，自動匹配「錦泰苑」與「德信中學」的所有站點 ID
-        if (mySavedStops.length === 0 && allKmbStops.length > 0) {
-          const matchedStops = allKmbStops.filter(stop => 
-            targetNames.some(name => stop.name_tc === name)
-          );
+        // 使用 includes 進行模糊匹配
+        const matched = allKmbStops.filter(s => 
+          s.name_tc && TARGET_KEYWORDS.some(kw => s.name_tc.includes(kw))
+        );
 
-          matchedStops.forEach(stop => {
-            if (!mySavedStops.some(s => s.id === stop.stop)) {
-              mySavedStops.push({ id: stop.stop, name: stop.name_tc });
-            }
-          });
-
-          localStorage.setItem('myKmbStops_v3', JSON.stringify(mySavedStops));
+        if (matched.length > 0) {
+          mySavedStops = matched.map(s => ({ id: s.stop, name: s.name_tc }));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(mySavedStops));
+          setStatus(`成功自動識別 ${mySavedStops.length} 個相關站點！更新班次中...`);
+          fetchETAs();
+        } else {
+          setStatus('未能在九巴資料庫中找到錦泰苑/德信中學，請點擊右側手動搜尋。', true);
         }
-
-        fetchAllETAs();
-      } catch (e) {
-        console.error('車站名單載入失敗', e);
+      } catch (err) {
+        setStatus(`車站資料讀取失敗 (${err.message})，請檢查網路或點擊「重置」。`, true);
       }
     }
 
-    // 4. 車站搜尋與切換
-    function searchStops() {
-      const query = document.getElementById('search-input').value.trim();
-      const resultsContainer = document.getElementById('search-results');
-      if (!query) {
-        resultsContainer.innerHTML = '<div style="color: #94A3B8; text-align: center; padding: 10px;">請在上方輸入車站關鍵字</div>';
-        return;
-      }
-
-      const matched = allKmbStops.filter(stop => stop.name_tc.includes(query)).slice(0, 20);
-      
-      if (matched.length === 0) {
-        resultsContainer.innerHTML = '<div style="color: #94A3B8; text-align: center; padding: 10px;">找不到相關車站</div>';
-        return;
-      }
-
-      resultsContainer.innerHTML = matched.map(stop => `
-        <div class="result-item" onclick="addStop('${stop.stop}', '${stop.name_tc}')">
-          <span>${stop.name_tc}</span>
-          <span style="color: #38BDF8; font-weight: bold;">+ 加入</span>
-        </div>
-      `).join('');
+    // 重置按鈕
+    async function resetDefaultStops() {
+      localStorage.removeItem(STORAGE_KEY);
+      mySavedStops = [];
+      await autoFetchTargetStops();
     }
 
-    function addStop(id, name) {
-      if (!mySavedStops.some(s => s.id === id)) {
-        mySavedStops.push({ id, name });
-        renderTags();
-      }
-    }
-
-    function removeStop(id) {
-      mySavedStops = mySavedStops.filter(s => s.id !== id);
-      renderTags();
-    }
-
-    function renderTags() {
-      const container = document.getElementById('selected-tags');
-      container.innerHTML = mySavedStops.map(s => `
-        <div class="tag">
-          ${s.name} <span onclick="removeStop('${s.id}')">✕</span>
-        </div>
-      `).join('');
-    }
-
-    function openModal() {
-      renderTags();
-      document.getElementById('modal').style.display = 'flex';
-    }
-
-    function closeModal() {
-      document.getElementById('modal').style.display = 'none';
-      localStorage.setItem('myKmbStops_v3', JSON.stringify(mySavedStops));
-      fetchAllETAs();
-    }
-
-    // 5. 抓取實時到站時間
-    async function fetchAllETAs() {
+    // 4. 抓取到站時間 (ETA)
+    async function fetchETAs() {
       const container = document.getElementById('eta-container');
-      
+
       if (!mySavedStops || mySavedStops.length === 0) {
-        container.innerHTML = `
-          <div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px; background: #1E293B; border-radius: 16px;">
-            請點擊右上角「🔍 管理/新增車站」選擇車站。
-          </div>`;
+        container.innerHTML = `<div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px; background: #1E293B; border-radius: 12px;">未選擇任何車站。請點擊「重置預設車站」或右上角「管理車站」。</div>`;
         return;
       }
 
       try {
-        const requests = mySavedStops.map(stop => 
+        // 並行發送請求
+        const reqs = mySavedStops.map(stop => 
           fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stop.id}`)
             .then(res => res.json())
             .then(json => ({ stopName: stop.name, data: json.data || [] }))
             .catch(() => ({ stopName: stop.name, data: [] }))
         );
 
-        const results = await Promise.all(requests);
+        const results = await Promise.all(reqs);
         const routeMap = {};
 
-        results.forEach(result => {
-          if (!Array.isArray(result.data)) return;
-
-          result.data.forEach(item => {
+        results.forEach(res => {
+          if (!Array.isArray(res.data)) return;
+          res.data.forEach(item => {
             if (!item || !item.eta || !item.route) return;
 
-            // 鍵值：路線 + 目的地
             const key = `${item.route}_${item.dest_tc}`;
-
             if (!routeMap[key]) {
               routeMap[key] = {
                 route: item.route,
                 dest: item.dest_tc,
-                stopName: result.stopName,
+                stopName: res.stopName,
                 etas: []
               };
             }
@@ -389,11 +368,11 @@
 
         const keys = Object.keys(routeMap);
         if (keys.length === 0) {
-          container.innerHTML = '<div style="color: #64748B; grid-column: span 2; text-align: center; padding: 30px; background: #1E293B; border-radius: 16px;">目前無實時班次數據</div>';
+          container.innerHTML = `<div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 30px; background: #1E293B; border-radius: 12px;">目前無實時班次數據（可能非服務時間）</div>`;
+          setStatus(`已連線，目前無班次數據 (${new Date().toLocaleTimeString('zh-HK')})`);
           return;
         }
 
-        // 按路線名稱排序
         keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
         let html = '';
@@ -401,8 +380,8 @@
           const info = routeMap[key];
           info.etas.sort((a, b) => new Date(a) - new Date(b));
 
-          const eta1 = calculateMinutes(info.etas[0]);
-          const eta2 = info.etas[1] ? `下班: ${calculateMinutes(info.etas[1])}` : '';
+          const eta1 = calcMin(info.etas[0]);
+          const eta2 = info.etas[1] ? `下班: ${calcMin(info.etas[1])}` : '';
 
           html += `
             <div class="card">
@@ -422,24 +401,87 @@
         });
 
         container.innerHTML = html;
+        setStatus(`數據已更新 (${new Date().toLocaleTimeString('zh-HK')}) - 共 ${keys.length} 條路線`);
 
       } catch (e) {
-        console.error('更新失敗', e);
-        container.innerHTML = '<div style="color: #EF4444; grid-column: span 2; text-align: center; padding: 20px;">數據更新失敗，請檢查網絡連線</div>';
+        setStatus(`更新班次失敗: ${e.message}`, true);
       }
     }
 
-    function calculateMinutes(etaString) {
-      if (!etaString) return '無班次';
-      const diffMs = new Date(etaString) - new Date();
+    function calcMin(etaStr) {
+      if (!etaStr) return '無班次';
+      const diffMs = new Date(etaStr) - new Date();
       const diffMins = Math.round(diffMs / 60000);
       if (diffMins <= 0) return '即將到達';
       return `${diffMins} 分鐘`;
     }
 
-    // 啟動程式
-    initKmbStops();
-    setInterval(fetchAllETAs, 30000); // 每 30 秒自動更新到站時間
+    // 5. 搜尋 Modal 相關邏輯
+    async function loadAllStopsIfNeeded() {
+      if (allKmbStops.length === 0) {
+        try {
+          const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop');
+          const json = await res.json();
+          allKmbStops = json.data || [];
+        } catch(e) {}
+      }
+    }
+
+    async function openModal() {
+      renderTags();
+      document.getElementById('modal').style.display = 'flex';
+      await loadAllStopsIfNeeded();
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mySavedStops));
+      fetchETAs();
+    }
+
+    function searchStops() {
+      const q = document.getElementById('search-input').value.trim();
+      const resContainer = document.getElementById('search-results');
+      if (!q) {
+        resContainer.innerHTML = '<div style="color: #94A3B8; text-align: center; padding: 10px;">請在上方輸入車站名稱</div>';
+        return;
+      }
+
+      const matched = allKmbStops.filter(s => s.name_tc && s.name_tc.includes(q)).slice(0, 15);
+      if (matched.length === 0) {
+        resContainer.innerHTML = '<div style="color: #94A3B8; text-align: center; padding: 10px;">找不到相關車站</div>';
+        return;
+      }
+
+      resContainer.innerHTML = matched.map(s => `
+        <div class="result-item" onclick="addStop('${s.stop}', '${s.name_tc}')">
+          <span>${s.name_tc}</span>
+          <span style="color: #38BDF8; font-weight: bold;">+ 新增</span>
+        </div>
+      `).join('');
+    }
+
+    function addStop(id, name) {
+      if (!mySavedStops.some(s => s.id === id)) {
+        mySavedStops.push({ id, name });
+        renderTags();
+      }
+    }
+
+    function removeStop(id) {
+      mySavedStops = mySavedStops.filter(s => s.id !== id);
+      renderTags();
+    }
+
+    function renderTags() {
+      document.getElementById('selected-tags').innerHTML = mySavedStops.map(s => `
+        <div class="tag">${s.name} <span onclick="removeStop('${s.id}')">✕</span></div>
+      `).join('');
+    }
+
+    // 啟動
+    initApp();
+    setInterval(fetchETAs, 30000); // 30秒自動更新
   </script>
 </body>
 </html>
