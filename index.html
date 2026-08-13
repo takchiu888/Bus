@@ -198,27 +198,27 @@
 
   <!-- 控制列 -->
   <div class="control-bar">
-    <div class="section-title">🚌 巴士實時到站</div>
-    <button class="btn-settings" onclick="openModal()">🔍 搜尋/設定車站</button>
+    <div class="section-title">🚌 巴士實時到站（預設 MA131 / MA354 / MA358 / MA391 / MA393）</div>
+    <button class="btn-settings" onclick="openModal()">🔍 管理/新增車站</button>
   </div>
 
   <!-- 到站時間列表 -->
   <div class="grid-container">
     <div class="grid" id="eta-container">
-      <div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px;">數據加載中...</div>
+      <div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px;">巴士數據載入中...</div>
     </div>
   </div>
 
   <!-- 車站搜尋 Modal -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
-      <div class="modal-title">搜尋車站（例：錦泰苑 / 馬鞍山）</div>
+      <div class="modal-title">搜尋車站</div>
       <input type="text" class="search-input" id="search-input" placeholder="輸入關鍵字搜尋..." oninput="searchStops()">
       <div class="search-results" id="search-results">
         <div style="color: #94A3B8; text-align: center; padding: 10px;">請在上方輸入車站關鍵字</div>
       </div>
       <div>
-        <div style="font-size: 0.9rem; color: #94A3B8;">已選擇的車站：</div>
+        <div style="font-size: 0.9rem; color: #94A3B8;">目前顯示的車站：</div>
         <div class="selected-list" id="selected-tags"></div>
       </div>
       <button class="btn-close" onclick="closeModal()">儲存並顯示</button>
@@ -228,6 +228,9 @@
   <script>
     let allKmbStops = [];
     let mySavedStops = JSON.parse(localStorage.getItem('myKmbStops')) || [];
+
+    // 預設車站關鍵字（涵蓋 MA131, MA354, MA358, MA391, MA393 車站）
+    const presetTargetNames = ["錦泰苑", "德信中學", "富安花園", "亞公角"];
 
     // 1. 時鐘
     function updateClock() {
@@ -253,17 +256,34 @@
     fetchWeather();
     setInterval(fetchWeather, 600000);
 
-    // 3. 預先下載九巴所有車站對照表
-    async function loadKmbStopDatabase() {
+    // 3. 下載九巴車站對照表並預設站位
+    async function initKmbStops() {
       try {
         const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop');
         const json = await res.json();
         allKmbStops = json.data || [];
+
+        // 如果使用者第一次開啟，自動載入 MA131, MA354, MA358, MA391, MA393 的對應車站
+        if (mySavedStops.length === 0 && allKmbStops.length > 0) {
+          const autoStops = allKmbStops.filter(stop => 
+            presetTargetNames.some(target => stop.name_tc.includes(target))
+          );
+
+          // 避免重複加入
+          autoStops.forEach(stop => {
+            if (!mySavedStops.some(s => s.id === stop.stop)) {
+              mySavedStops.push({ id: stop.stop, name: stop.name_tc });
+            }
+          });
+
+          localStorage.setItem('myKmbStops', JSON.stringify(mySavedStops));
+        }
+
+        fetchAllETAs();
       } catch (e) {
         console.error('車站名單載入失敗', e);
       }
     }
-    loadKmbStopDatabase();
 
     // 4. 車站搜尋與切換
     function searchStops() {
@@ -328,7 +348,7 @@
       if (!mySavedStops || mySavedStops.length === 0) {
         container.innerHTML = `
           <div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px; background: #1E293B; border-radius: 16px;">
-            請點擊右上角「🔍 搜尋/設定車站」，搜尋並加入你家附近的車站（例如輸入：錦泰苑）！
+            請點擊右上角「🔍 管理/新增車站」選擇車站。
           </div>`;
         return;
       }
@@ -369,11 +389,11 @@
 
         const keys = Object.keys(routeMap);
         if (keys.length === 0) {
-          container.innerHTML = '<div style="color: #64748B; grid-column: span 2; text-align: center; padding: 30px; background: #1E293B; border-radius: 16px;">所選車站目前無班次紀錄</div>';
+          container.innerHTML = '<div style="color: #64748B; grid-column: span 2; text-align: center; padding: 30px; background: #1E293B; border-radius: 16px;">目前無實時班次數據</div>';
           return;
         }
 
-        // 按路線排序
+        // 按路線名稱排序
         keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
         let html = '';
@@ -417,9 +437,9 @@
       return `${diffMins} 分鐘`;
     }
 
-    // 啟動
-    fetchAllETAs();
-    setInterval(fetchAllETAs, 30000);
+    // 啟動程式
+    initKmbStops();
+    setInterval(fetchAllETAs, 30000); // 每 30 秒自動更新到站時間
   </script>
 </body>
 </html>
