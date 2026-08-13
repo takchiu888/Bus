@@ -38,7 +38,7 @@
     .weather-info { font-size: 1rem; color: #CBD5E1; display: flex; flex-direction: column; gap: 2px; }
     .humidity { color: #38BDF8; }
 
-    /* 系統狀態提示列 */
+    /* 狀態提示列 */
     .status-bar {
       margin-top: 10px;
       background: #0284C7;
@@ -61,7 +61,6 @@
       flex-shrink: 0;
     }
     .section-title { font-size: 1.1rem; color: #94A3B8; font-weight: 600; }
-    .btn-group { display: flex; gap: 8px; }
     .btn {
       background: #334155;
       color: white;
@@ -72,9 +71,8 @@
       cursor: pointer;
       font-weight: 600;
     }
-    .btn-primary { background: #0284C7; }
 
-    /* 到站時間區 */
+    /* 到站時間卡片區 */
     .grid-container {
       flex: 1;
       overflow-y: auto;
@@ -93,7 +91,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-left: 5px solid #EF4444;
+      border-left: 5px solid #EF4444; /* 九巴紅 */
     }
 
     .route-header { display: flex; align-items: center; gap: 8px; }
@@ -105,7 +103,7 @@
       padding: 2px 6px; 
       border-radius: 4px; 
       font-weight: 600;
-      max-width: 120px;
+      max-width: 130px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -115,65 +113,6 @@
     .eta-box { text-align: right; }
     .eta-main { font-size: 1.8rem; font-weight: 700; color: #10B981; }
     .eta-sub { font-size: 0.8rem; color: #64748B; margin-top: 2px; }
-
-    /* Modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal {
-      background: #1E293B;
-      width: 90%;
-      max-width: 500px;
-      border-radius: 16px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      max-height: 80vh;
-    }
-    .search-input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #475569;
-      background: #0F172A;
-      color: white;
-      font-size: 1rem;
-    }
-    .search-results {
-      flex: 1;
-      overflow-y: auto;
-      max-height: 200px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .result-item {
-      background: #334155;
-      padding: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-    }
-    .selected-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-    .tag {
-      background: #0284C7;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 16px;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .tag span { cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -187,55 +126,36 @@
     <div class="weather-box">
       <div class="temp-main" id="temp">--°C</div>
       <div class="weather-info">
-        <span id="weather-desc">天文台數據</span>
+        <span id="weather-desc">香港天文台</span>
         <span class="humidity">濕度: <span id="humidity">--</span>%</span>
       </div>
     </div>
   </div>
 
-  <!-- 系統狀態提示列 -->
+  <!-- 系統狀態列 -->
   <div class="status-bar" id="status-bar">
-    <span id="status-msg">🚀 正在啟動系統...</span>
+    <span id="status-msg">🚀 初始化系統中...</span>
   </div>
 
   <!-- 控制列 -->
   <div class="control-bar">
-    <div class="section-title">🚌 錦泰苑 / 德信中學 實時到站</div>
-    <div class="btn-group">
-      <button class="btn" onclick="resetDefaultStops()">↺ 重置預設車站</button>
-      <button class="btn btn-primary" onclick="openModal()">🔍 管理車站</button>
-    </div>
+    <div class="section-title">🚌 錦泰苑 / 德信中學（MA131, 354, 358, 391, 392）</div>
+    <button class="btn" onclick="forceReloadStops()">↺ 強制重新載入</button>
   </div>
 
   <!-- 到站時間列表 -->
   <div class="grid-container">
     <div class="grid" id="eta-container">
-      <div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px;">請稍候，資料處理中...</div>
-    </div>
-  </div>
-
-  <!-- 車站搜尋 Modal -->
-  <div class="modal-overlay" id="modal">
-    <div class="modal">
-      <h3 style="color: white;">搜尋並新增車站</h3>
-      <input type="text" class="search-input" id="search-input" placeholder="輸入關鍵字 (如: 錦泰苑)..." oninput="searchStops()">
-      <div class="search-results" id="search-results">
-        <div style="color: #94A3B8; text-align: center; padding: 10px;">請在上方輸入車站名稱</div>
-      </div>
-      <div>
-        <div style="font-size: 0.85rem; color: #94A3B8;">已選擇的車站：</div>
-        <div class="selected-list" id="selected-tags"></div>
-      </div>
-      <button class="btn btn-primary" style="padding: 10px;" onclick="closeModal()">儲存並更新</button>
+      <div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px;">正在讀取巴士到站時間，請稍候...</div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = 'myKmbStops_v4';
-    const TARGET_KEYWORDS = ["錦泰苑", "德信中學"];
+    const STORAGE_KEY = 'kmb_stops_ma_v5';
+    // 指定 5 個站牌對應的中文站名
+    const TARGET_STOPS = ["錦泰苑", "德信中學"];
     
-    let allKmbStops = [];
-    let mySavedStops = [];
+    let targetStopsList = [];
 
     function setStatus(msg, isError = false) {
       const bar = document.getElementById('status-bar');
@@ -263,91 +183,84 @@
         const data = await res.json();
         if (data.temperature?.data?.length > 0) document.getElementById('temp').innerText = `${data.temperature.data[0].value}°C`;
         if (data.humidity?.data?.length > 0) document.getElementById('humidity').innerText = data.humidity.data[0].value;
-      } catch (err) { console.error('天氣失敗', err); }
+      } catch (err) { console.error('天氣載入失敗', err); }
     }
     fetchWeather();
     setInterval(fetchWeather, 600000);
 
-    // 3. 初始化主邏輯
-    async function initApp() {
-      // 試圖讀取本地記錄
+    // 3. 自動搜尋並對應 MA131, 354, 358, 391, 392 的 ID
+    async function loadTargetStops() {
+      // 先清理舊版本 Key
+      ['myKmbStops_v1','myKmbStops_v2','myKmbStops_v3','myKmbStops_v4'].forEach(k => localStorage.removeItem(k));
+
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) mySavedStops = JSON.parse(saved);
-      } catch (e) { mySavedStops = []; }
+        const cached = localStorage.getItem(STORAGE_KEY);
+        if (cached) {
+          targetStopsList = JSON.parse(cached);
+          if (targetStopsList.length > 0) {
+            setStatus(`已定位 ${targetStopsList.length} 個站點 (MA131/354/358/391/392)，載入班次中...`);
+            fetchETAs();
+            return;
+          }
+        }
+      } catch(e) {}
 
-      // 若完全無紀錄或紀錄為空，則向 API 自動檢索「錦泰苑」與「德信中學」
-      if (!mySavedStops || mySavedStops.length === 0) {
-        await autoFetchTargetStops();
-      } else {
-        setStatus(`已載入 ${mySavedStops.length} 個已儲存站點，正在獲取班次...`);
-        fetchETAs();
-      }
-    }
-
-    // 自動搜尋預設站點
-    async function autoFetchTargetStops() {
-      setStatus('正在連線九巴 API 檢索「錦泰苑」與「德信中學」站點...');
+      // 若快取無數據，向 API 檢索 16 位元 ID
+      setStatus('連線九巴資料庫定位 MA131, 354, 358, 391, 392 站位中...');
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒逾時
-
-        const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop', { signal: controller.signal });
-        clearTimeout(timeoutId);
-        
-        if (!res.ok) throw new Error(`HTTP 錯誤: ${res.status}`);
+        const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop');
+        if (!res.ok) throw new Error('網絡連線錯誤');
 
         const json = await res.json();
-        allKmbStops = json.data || [];
+        const allStops = json.data || [];
 
-        // 使用 includes 進行模糊匹配
-        const matched = allKmbStops.filter(s => 
-          s.name_tc && TARGET_KEYWORDS.some(kw => s.name_tc.includes(kw))
+        // 精確匹配錦泰苑與德信中學的 5 個站位
+        const matched = allStops.filter(s => 
+          s.name_tc && TARGET_STOPS.some(kw => s.name_tc.includes(kw))
         );
 
         if (matched.length > 0) {
-          mySavedStops = matched.map(s => ({ id: s.stop, name: s.name_tc }));
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(mySavedStops));
-          setStatus(`成功自動識別 ${mySavedStops.length} 個相關站點！更新班次中...`);
+          targetStopsList = matched.map(s => ({ id: s.stop, name: s.name_tc }));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(targetStopsList));
+          setStatus(`成功匹配 ${targetStopsList.length} 個指定站位！載入班次中...`);
           fetchETAs();
         } else {
-          setStatus('未能在九巴資料庫中找到錦泰苑/德信中學，請點擊右側手動搜尋。', true);
+          setStatus('無法自動配對站位，請按右側「強制重新載入」。', true);
         }
       } catch (err) {
-        setStatus(`車站資料讀取失敗 (${err.message})，請檢查網路或點擊「重置」。`, true);
+        setStatus(`資料下載失敗：${err.message}，請檢查網絡`, true);
       }
     }
 
-    // 重置按鈕
-    async function resetDefaultStops() {
+    function forceReloadStops() {
       localStorage.removeItem(STORAGE_KEY);
-      mySavedStops = [];
-      await autoFetchTargetStops();
+      targetStopsList = [];
+      loadTargetStops();
     }
 
     // 4. 抓取到站時間 (ETA)
     async function fetchETAs() {
       const container = document.getElementById('eta-container');
 
-      if (!mySavedStops || mySavedStops.length === 0) {
-        container.innerHTML = `<div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px; background: #1E293B; border-radius: 12px;">未選擇任何車站。請點擊「重置預設車站」或右上角「管理車站」。</div>`;
+      if (!targetStopsList || targetStopsList.length === 0) {
+        container.innerHTML = `<div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 40px; background: #1E293B; border-radius: 12px;">尚未取得車站數據，請點擊右上方「強制重新載入」。</div>`;
         return;
       }
 
       try {
-        // 並行發送請求
-        const reqs = mySavedStops.map(stop => 
+        const requests = targetStopsList.map(stop => 
           fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stop.id}`)
             .then(res => res.json())
             .then(json => ({ stopName: stop.name, data: json.data || [] }))
             .catch(() => ({ stopName: stop.name, data: [] }))
         );
 
-        const results = await Promise.all(reqs);
+        const results = await Promise.all(requests);
         const routeMap = {};
 
         results.forEach(res => {
           if (!Array.isArray(res.data)) return;
+
           res.data.forEach(item => {
             if (!item || !item.eta || !item.route) return;
 
@@ -368,11 +281,12 @@
 
         const keys = Object.keys(routeMap);
         if (keys.length === 0) {
-          container.innerHTML = `<div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 30px; background: #1E293B; border-radius: 12px;">目前無實時班次數據（可能非服務時間）</div>`;
-          setStatus(`已連線，目前無班次數據 (${new Date().toLocaleTimeString('zh-HK')})`);
+          container.innerHTML = `<div style="color: #94A3B8; grid-column: span 2; text-align: center; padding: 30px; background: #1E293B; border-radius: 12px;">目前無實時班次數據（或非服務時間）</div>`;
+          setStatus(`已連線，目前無服務班次 (${new Date().toLocaleTimeString('zh-HK')})`);
           return;
         }
 
+        // 按路線名稱排序 (例如: 85K, 85X, 87D...)
         keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
         let html = '';
@@ -401,10 +315,10 @@
         });
 
         container.innerHTML = html;
-        setStatus(`數據已更新 (${new Date().toLocaleTimeString('zh-HK')}) - 共 ${keys.length} 條路線`);
+        setStatus(`最後更新：${new Date().toLocaleTimeString('zh-HK')} - 包含 5 個指定站位`);
 
       } catch (e) {
-        setStatus(`更新班次失敗: ${e.message}`, true);
+        setStatus(`更新班次失敗：${e.message}`, true);
       }
     }
 
@@ -416,72 +330,9 @@
       return `${diffMins} 分鐘`;
     }
 
-    // 5. 搜尋 Modal 相關邏輯
-    async function loadAllStopsIfNeeded() {
-      if (allKmbStops.length === 0) {
-        try {
-          const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop');
-          const json = await res.json();
-          allKmbStops = json.data || [];
-        } catch(e) {}
-      }
-    }
-
-    async function openModal() {
-      renderTags();
-      document.getElementById('modal').style.display = 'flex';
-      await loadAllStopsIfNeeded();
-    }
-
-    function closeModal() {
-      document.getElementById('modal').style.display = 'none';
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mySavedStops));
-      fetchETAs();
-    }
-
-    function searchStops() {
-      const q = document.getElementById('search-input').value.trim();
-      const resContainer = document.getElementById('search-results');
-      if (!q) {
-        resContainer.innerHTML = '<div style="color: #94A3B8; text-align: center; padding: 10px;">請在上方輸入車站名稱</div>';
-        return;
-      }
-
-      const matched = allKmbStops.filter(s => s.name_tc && s.name_tc.includes(q)).slice(0, 15);
-      if (matched.length === 0) {
-        resContainer.innerHTML = '<div style="color: #94A3B8; text-align: center; padding: 10px;">找不到相關車站</div>';
-        return;
-      }
-
-      resContainer.innerHTML = matched.map(s => `
-        <div class="result-item" onclick="addStop('${s.stop}', '${s.name_tc}')">
-          <span>${s.name_tc}</span>
-          <span style="color: #38BDF8; font-weight: bold;">+ 新增</span>
-        </div>
-      `).join('');
-    }
-
-    function addStop(id, name) {
-      if (!mySavedStops.some(s => s.id === id)) {
-        mySavedStops.push({ id, name });
-        renderTags();
-      }
-    }
-
-    function removeStop(id) {
-      mySavedStops = mySavedStops.filter(s => s.id !== id);
-      renderTags();
-    }
-
-    function renderTags() {
-      document.getElementById('selected-tags').innerHTML = mySavedStops.map(s => `
-        <div class="tag">${s.name} <span onclick="removeStop('${s.id}')">✕</span></div>
-      `).join('');
-    }
-
-    // 啟動
-    initApp();
-    setInterval(fetchETAs, 30000); // 30秒自動更新
+    // 啟動程式
+    loadTargetStops();
+    setInterval(fetchETAs, 30000); // 每 30 秒自動刷新班次
   </script>
 </body>
 </html>
